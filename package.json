@@ -1,0 +1,33 @@
+{
+  "name": "ping-universe",
+  "version": "0.1.0",
+  "description": "Ping - Google Chat Bot with Jira/Gmail integration",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": ["google-chat", "jira", "gmail", "bot"],
+  "private": true,
+  "dependencies": {
+    "express": "^4.21.0",
+    "googleapis": "^144.0.0",
+    "node-cron": "^3.0.3",
+    "firebase-admin": "^12.7.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.0",
+    "@types/node-cron": "^3.0.11",
+    "eslint": "^9.15.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}
