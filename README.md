@@ -11,7 +11,7 @@ Google Chat Bot — Jira / Gmail 연동 알림 및 브리핑 서비스
 ## 기능
 
 - **온보딩**: Google Chat DM → Jira/Gmail OAuth 연동
-- **아침 브리핑**: 스케줄 기반 Jira 이슈 + Gmail 미읽은 메일 요약
+- **아침 브리핑**: 스케줄 기반 Jira 이슈 + Gmail 읽지 않은 메일 요약
 - **Jira 실시간 알림**: Webhook → Google Chat 카드
 - **Gmail 실시간 알림**: Pub/Sub → 메일 필터링/요약 → 카드
 
