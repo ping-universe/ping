@@ -13,6 +13,10 @@ dist/
 *-firebase-adminsdk-*.json
 serviceAccountKey.json
 
+# Service account keys
+keys/
+*.json
+
 # IDE
 .idea/
 .vscode/
