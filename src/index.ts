@@ -7,7 +7,7 @@ import { errorHandler, notFoundHandler } from "./middleware/error";
 import { chatRouter } from "./routes/chat";
 import { jiraWebhookRouter } from "./routes/jira-webhook";
 import { gmailPubsubRouter } from "./routes/gmail-pubsub";
-import { oauthCallbackRouter } from "./routes/oauth-callback";
+import { oauthRouter } from "./routes/oauth";
 import { initScheduler } from "./scheduler/briefing.cron";
 
 const app = express();
@@ -38,7 +38,7 @@ app.get("/health", (_req, res) => {
 app.use("/chat", chatRouter);
 app.use("/webhook/jira", jiraWebhookRouter);
 app.use("/webhook/gmail", gmailPubsubRouter);
-app.use("/oauth", oauthCallbackRouter);
+app.use("/oauth", oauthRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

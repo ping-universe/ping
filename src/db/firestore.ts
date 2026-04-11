@@ -9,7 +9,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { config } from "../config/env";
 import { logger } from "../lib/logger";
-import { DEFAULT_BRIEFING, type UserDoc } from "../types/user";
+import {
+  DEFAULT_BRIEFING,
+  type AtlassianConnection,
+  type GmailConnection,
+  type UserDoc,
+} from "../types/user";
 
 let app: App | undefined;
 let dbInstance: Firestore | undefined;
@@ -70,6 +75,20 @@ export async function upsertUser(
     },
     { merge: true },
   );
+}
+
+export async function setAtlassianConnection(
+  userId: string,
+  conn: AtlassianConnection,
+): Promise<void> {
+  await upsertUser(userId, { atlassian: conn });
+}
+
+export async function setGmailConnection(
+  userId: string,
+  conn: GmailConnection,
+): Promise<void> {
+  await upsertUser(userId, { gmail: conn });
 }
 
 export async function clearAtlassian(userId: string): Promise<void> {
