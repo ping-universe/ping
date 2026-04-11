@@ -1,32 +1,74 @@
 import express from "express";
-import dotenv from "dotenv";
+import pinoHttp from "pino-http";
+import { config } from "./config/env";
+import { logger } from "./lib/logger";
+import { requestId } from "./middleware/request-id";
+import { errorHandler, notFoundHandler } from "./middleware/error";
 import { chatRouter } from "./routes/chat";
 import { jiraWebhookRouter } from "./routes/jira-webhook";
 import { gmailPubsubRouter } from "./routes/gmail-pubsub";
 import { oauthCallbackRouter } from "./routes/oauth-callback";
 import { initScheduler } from "./scheduler/briefing.cron";
 
-dotenv.config();
-
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
+app.use(requestId);
+app.use(
+  pinoHttp({
+    logger,
+    genReqId: (req) => (req as express.Request).id,
+    customLogLevel: (_req, res, err) => {
+      if (err || res.statusCode >= 500) return "error";
+      if (res.statusCode >= 400) return "warn";
+      return "info";
+    },
+  }),
+);
+app.use(express.json({ limit: "1mb" }));
 
-// Health check
 app.get("/health", (_req, res) => {
-  res.json({ status: "ok", service: "ping-universe", timestamp: new Date().toISOString() });
+  res.json({
+    status: "ok",
+    service: "ping-universe",
+    env: config.nodeEnv,
+    timestamp: new Date().toISOString(),
+  });
 });
 
-// Routes
 app.use("/chat", chatRouter);
 app.use("/webhook/jira", jiraWebhookRouter);
 app.use("/webhook/gmail", gmailPubsubRouter);
-app.use("/oauth/callback", oauthCallbackRouter);
+app.use("/oauth", oauthCallbackRouter);
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`[Ping] Server running on port ${PORT}`);
+app.use(notFoundHandler);
+app.use(errorHandler);
+
+const server = app.listen(config.port, () => {
+  logger.info({ port: config.port, env: config.nodeEnv }, "ping-universe listening");
   initScheduler();
-  console.log("[Ping] Briefing scheduler initialized");
+});
+
+function shutdown(signal: string): void {
+  logger.info({ signal }, "shutting down");
+  server.close((err) => {
+    if (err) {
+      logger.error({ err: err.message }, "server close failed");
+      process.exit(1);
+    }
+    process.exit(0);
+  });
+  setTimeout(() => {
+    logger.warn("forced exit after 10s");
+    process.exit(1);
+  }, 10_000).unref();
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("unhandledRejection", (reason) => {
+  logger.error({ reason }, "unhandledRejection");
+});
+process.on("uncaughtException", (err) => {
+  logger.fatal({ err: err.message, stack: err.stack }, "uncaughtException");
+  process.exit(1);
 });

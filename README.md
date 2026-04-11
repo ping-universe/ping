@@ -5,7 +5,7 @@ Google Chat Bot — Jira / Gmail 연동 알림 및 브리핑 서비스
 ## 아키텍처
 
 ```
-[로컬 개발] → [GitHub main] → [prd 머지] → [GitHub Actions] → [맥미니 PM2 배포]
+[로컬 개발] → [main] → [stg] → [prd] → [GitHub Actions] → [맥미니 PM2 배포]
 ```
 
 ## 기능
@@ -47,11 +47,12 @@ pm2 restart ecosystem.config.js
 
 | 브랜치 | 용도 |
 |--------|------|
-| `main` | 개발 안정선 |
-| `feature/*` | 기능 개발 |
-| `fix/*` | 버그 수정 |
-| `hotfix/*` | 긴급 수정 |
-| `prd` | 운영 배포 |
+| `main` | 개발 기본선 (모든 작업 커밋/PR 대상) |
+| `stg`  | 스테이징 (main → stg 승격, QA/통합 테스트) |
+| `prd`  | 운영 (stg → prd 승격 시 맥미니 자동 배포) |
+
+> 기능/버그는 별도 브랜치를 만들지 않고 `main`에 작업합니다.
+> `feature/*`, `fix/*` 같은 이름은 **브랜치가 아니라 `src/` 하위 폴더 구조**입니다.
 
 ## 태그
 
