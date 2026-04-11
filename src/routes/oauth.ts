@@ -9,6 +9,7 @@ import {
   buildAuthorizeUrl,
   exchangeCode,
   getAccessibleResources,
+  getCurrentUser,
 } from "../services/atlassian-oauth.service";
 
 export const oauthRouter = Router();
@@ -48,7 +49,10 @@ oauthRouter.get(
       }
 
       const tokens = await exchangeCode(code);
-      const resources = await getAccessibleResources(tokens.access_token);
+      const [resources, me] = await Promise.all([
+        getAccessibleResources(tokens.access_token),
+        getCurrentUser(tokens.access_token),
+      ]);
       const primary = resources[0];
       if (!primary) {
         throw new BadRequestError("No accessible Atlassian site for this user");
@@ -63,6 +67,7 @@ oauthRouter.get(
         tokenType: tokens.token_type,
         cloudId: primary.id,
         siteUrl: primary.url,
+        accountId: me.account_id,
       });
 
       logger.info(

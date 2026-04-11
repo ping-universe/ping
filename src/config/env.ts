@@ -16,6 +16,7 @@ const schema = z.object({
   ATLASSIAN_CLIENT_ID: z.string().min(1),
   ATLASSIAN_CLIENT_SECRET: z.string().min(1),
   ATLASSIAN_REDIRECT_URI: z.string().url(),
+  JIRA_WEBHOOK_SECRET: z.string().min(16),
 
   GOOGLE_OAUTH_CLIENT_ID: z.string().min(1),
   GOOGLE_OAUTH_CLIENT_SECRET: z.string().min(1),
@@ -57,6 +58,7 @@ export const config = {
     clientId: env.ATLASSIAN_CLIENT_ID,
     clientSecret: env.ATLASSIAN_CLIENT_SECRET,
     redirectUri: env.ATLASSIAN_REDIRECT_URI,
+    webhookSecret: env.JIRA_WEBHOOK_SECRET,
     scopes: [
       "read:jira-user",
       "read:jira-work",

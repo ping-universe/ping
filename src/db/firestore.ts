@@ -59,6 +59,17 @@ export async function getUser(userId: string): Promise<UserDoc | null> {
   return snap.exists ? (snap.data() as UserDoc) : null;
 }
 
+export async function findUserByAtlassianAccountId(
+  accountId: string,
+): Promise<UserDoc | null> {
+  const snap = await db()
+    .collection(USERS)
+    .where("atlassian.accountId", "==", accountId)
+    .limit(1)
+    .get();
+  return snap.empty ? null : (snap.docs[0]!.data() as UserDoc);
+}
+
 export async function upsertUser(
   userId: string,
   patch: Partial<UserDoc>,

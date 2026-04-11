@@ -75,6 +75,27 @@ export async function refreshAccessToken(
   return (await res.json()) as AtlassianTokenResponse;
 }
 
+export interface AtlassianMe {
+  account_id: string;
+  email?: string;
+  name?: string;
+  picture?: string;
+}
+
+export async function getCurrentUser(accessToken: string): Promise<AtlassianMe> {
+  const res = await fetch("https://api.atlassian.com/me", {
+    headers: { Authorization: `Bearer ${accessToken}`, Accept: "application/json" },
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new UnauthorizedError("Failed to fetch Atlassian /me", {
+      status: res.status,
+      body,
+    });
+  }
+  return (await res.json()) as AtlassianMe;
+}
+
 export async function getAccessibleResources(
   accessToken: string,
 ): Promise<AccessibleResource[]> {

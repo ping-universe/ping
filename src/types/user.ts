@@ -12,6 +12,8 @@ export interface AtlassianConnection extends OAuthTokens {
   // Cloud id returned from accessible-resources — required for Jira REST calls
   cloudId: string;
   siteUrl: string;
+  // Atlassian account_id from /me — used to resolve webhook recipients
+  accountId: string;
 }
 
 export interface GmailConnection extends OAuthTokens {
