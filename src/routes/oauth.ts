@@ -4,13 +4,18 @@ import { z } from "zod";
 import { BadRequestError } from "../lib/errors";
 import { logger } from "../lib/logger";
 import { consumeState, createState } from "../db/oauth-state";
-import { setAtlassianConnection } from "../db/firestore";
+import { setAtlassianConnection, setGmailConnection } from "../db/firestore";
 import {
   buildAuthorizeUrl,
   exchangeCode,
   getAccessibleResources,
   getCurrentUser,
 } from "../services/atlassian-oauth.service";
+import {
+  buildGmailAuthorizeUrl,
+  exchangeGmailCode,
+} from "../services/gmail-oauth.service";
+import { getProfile, startWatch } from "../services/gmail.service";
 
 export const oauthRouter = Router();
 
@@ -79,6 +84,70 @@ oauthRouter.get(
         .status(200)
         .type("html")
         .send(renderSuccessPage("Jira / Confluence", primary.name));
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// ── Gmail OAuth ──
+
+oauthRouter.get(
+  "/gmail/start",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { userId } = startQuery.parse(req.query);
+      const state = await createState(userId, "gmail");
+      const url = buildGmailAuthorizeUrl(state);
+      logger.info({ userId, requestId: req.id }, "gmail oauth start");
+      res.redirect(url);
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+oauthRouter.get(
+  "/gmail/callback",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { code, state } = callbackQuery.parse(req.query);
+      const consumed = await consumeState(state, "gmail");
+      if (!consumed) {
+        throw new BadRequestError("Invalid or expired Gmail OAuth state");
+      }
+
+      const tokens = await exchangeGmailCode(code);
+      if (!tokens.refresh_token) {
+        throw new BadRequestError(
+          "No refresh_token received. Re-authorize with prompt=consent.",
+        );
+      }
+
+      const profile = await getProfile(tokens.access_token);
+      const watch = await startWatch(tokens.access_token);
+
+      const expiresAt = Timestamp.fromMillis(Date.now() + tokens.expires_in * 1000);
+      await setGmailConnection(consumed.userId, {
+        accessToken: tokens.access_token,
+        refreshToken: tokens.refresh_token,
+        expiresAt,
+        scope: tokens.scope,
+        tokenType: tokens.token_type,
+        emailAddress: profile.emailAddress,
+        historyId: watch.historyId,
+        watchExpiresAt: Timestamp.fromMillis(watch.expiration),
+      });
+
+      logger.info(
+        { userId: consumed.userId, email: profile.emailAddress, requestId: req.id },
+        "gmail oauth connected",
+      );
+
+      res
+        .status(200)
+        .type("html")
+        .send(renderSuccessPage("Gmail", profile.emailAddress));
     } catch (err) {
       next(err);
     }

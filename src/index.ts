@@ -9,6 +9,7 @@ import { jiraWebhookRouter } from "./routes/jira-webhook";
 import { gmailPubsubRouter } from "./routes/gmail-pubsub";
 import { oauthRouter } from "./routes/oauth";
 import { initScheduler } from "./scheduler/briefing.cron";
+import { initGmailWatchCron } from "./scheduler/gmail-watch.cron";
 
 const app = express();
 
@@ -46,6 +47,7 @@ app.use(errorHandler);
 const server = app.listen(config.port, () => {
   logger.info({ port: config.port, env: config.nodeEnv }, "ping-universe listening");
   initScheduler();
+  initGmailWatchCron();
 });
 
 function shutdown(signal: string): void {
