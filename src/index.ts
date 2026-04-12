@@ -27,11 +27,15 @@ app.use(
 );
 app.use(express.json({ limit: "1mb" }));
 
+const startedAt = new Date();
+
 app.get("/health", (_req, res) => {
   res.json({
     status: "ok",
     service: "ping-universe",
+    version: process.env.npm_package_version ?? "0.1.0",
     env: config.nodeEnv,
+    uptime: Math.floor((Date.now() - startedAt.getTime()) / 1000),
     timestamp: new Date().toISOString(),
   });
 });
